@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ak/ozon/tgbot/internal/app/commands"
 	"ak/ozon/tgbot/internal/service/product"
 	"log"
 	"os"
@@ -31,38 +32,19 @@ func main() {
 
 	productServise := product.NewService()
 
+	commander := commands.NewCommander(bot, productServise)
+
 	for update := range updates {
-		if update.Message != nil { // If we got a message
+		if update.Message != nil {
 
 			switch update.Message.Command() {
 			case "help":
-				helpComand(bot, update.Message)
+				commander.Help(update.Message)
 			case "list":
-				listComand(bot, update.Message, productServise)
+				commander.List(update.Message)
 			default:
-				defaultSend(bot, update.Message)
+				commander.DefaultSend(update.Message)
 			}
 		}
 	}
-}
-
-func helpComand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
-	msg := tgbotapi.NewMessage(message.Chat.ID, "/help - help\n"+
-		"/list - list of products")
-	bot.Send(msg)
-}
-
-func listComand(bot *tgbotapi.BotAPI, message *tgbotapi.Message, productServise *product.Service) {
-	allProducts := productServise.List()
-	outputMessage := "Here are all the products:\n\n"
-	for _, p := range allProducts {
-		outputMessage += p.Title + "\n"
-	}
-	msg := tgbotapi.NewMessage(message.Chat.ID, outputMessage)
-	bot.Send(msg)
-}
-
-func defaultSend(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
-	msg := tgbotapi.NewMessage(message.Chat.ID, "Not recognise: "+message.Text)
-	bot.Send(msg)
 }
